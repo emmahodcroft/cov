@@ -9,33 +9,22 @@ rule all:
     input:
         ["auspice/CoV_229E.json", #"auspice/cov.json",
          "auspice/CoV_NL63.json",
-         "auspice/CoV_Betacoronavirus1.json",
-         "auspice/CoV_SARS.json",
+         "auspice/CoV_OC43.json",
          "auspice/CoV_HKU1.json"]
 
 rule make_database_all:
     input:
-        expand("genbank/CoV-{id}_genbank_meta.tsv", id=["229E", "NL63", "SARS", "Betacoronavirus1","HKU1"])
+        expand("genbank/CoV-{id}_genbank_meta.tsv", id=["229E", "NL63", "OC43","HKU1"])
 
 #calls for the augur runs
 rule build_HKU1:
-    input: "auspice/CoV_HKU1.json"
+    input: "auspice/CoV_HKU1_spike.json"
 rule build_229E:
-    input: "auspice/CoV_229E.json"
+    input: "auspice/CoV_229E_spike.json"
 rule build_NL63:
-    input: "auspice/CoV_NL63.json"
-rule build_SARS:
-    input: "auspice/CoV_SARS.json"
-rule build_beta:
-    input: "auspice/CoV_Betacoronavirus1.json"
-rule build_beta_tangle:
-    input:
-        "auspice/CoV_Betacoronavirus1-replicase.json",
-        "auspice/CoV_Betacoronavirus1-last7.json"
-rule build_229E_tangle:
-    input:
-        "auspice/CoV_229E-replicase.json",
-        "auspice/CoV_229E-last7.json"
+    input: "auspice/CoV_NL63_spike.json"
+rule build_OC43:
+    input: "auspice/CoV_OC43_spike.json"
 
 #calls for individual database runs
 rule make_database_HKU1:
@@ -47,25 +36,21 @@ rule make_database_229E:
 rule make_database_NL63:
     input:
         "genbank/CoV-NL63_genbank_meta.tsv"
-rule make_database_SARS:
+rule make_database_OC43:
     input:
-        "genbank/CoV-SARS_genbank_meta.tsv"
-rule make_database_beta:
-    input:
-        "genbank/CoV-Betacoronavirus1_genbank_meta.tsv"
+        "genbank/CoV-OC43_genbank_meta.tsv"
 
 wildcard_constraints:
     gene="|-last7|-replicase",
-    id="229E|NL63|SARS|Betacoronavirus1|HKU1"
+    id="229E|NL63|OC43|HKU1"
 
 rule files:
     input:
         #raw vipr tab-delimited download files go here. Change the file name to match your latest download version
-        file_229E = "data/CoV-229E-23Jan20.tsv",
-        file_NL63 = "data/CoV-NL63-23Jan20.tsv",
-        file_SARS = "data/CoV-SARS-23Jan20.tsv",
-        file_beta = "data/CoV-Betacoronavirus1-23Jan20.tsv",
-        file_HKU1 = "data/CoV-HKU1-19Apr20.tsv",
+        file_229E = "data/vipr_download_229E_01May2020.tsv", #"data/CoV-229E-23Jan20.tsv",
+        file_NL63 = "data/vipr_download_NL63_01May2020.tsv", #"data/CoV-NL63-23Jan20.tsv",
+        file_beta = "data/vipr_download_OC43_01May2020.tsv", #"data/CoV-Betacoronavirus1-23Jan20.tsv",
+        file_HKU1 = "data/vipr_download_HKU1_01May2020.tsv", #"data/CoV-HKU1-19Apr20.tsv",
 
         #currently manual samples are not used.
         #samples added manually - not from ViPR (ensure not duplicates of anything downloaded)
@@ -90,6 +75,8 @@ rule files:
         colors = "config/colors.tsv",
         lat_longs = "config/lat_longs.tsv",
 
+        blast_ref = "{id}/config/CoV-{id}-translate_reference.fasta",
+
 
 files = rules.files.input
 
@@ -101,8 +88,7 @@ def is_rerun(wildcards):
 
 VIPR_FILES = {"229E": files.file_229E,
               "NL63": files.file_NL63,
-              "SARS": files.file_SARS,
-              "Betacoronavirus1": files.file_beta,
+              "OC43": files.file_beta,
               "HKU1": files.file_HKU1}
 
 ##############################
@@ -181,7 +167,7 @@ rule download_seqs:
         originalMetaLen = len(meta)
         additional_meta = {}
         #len_cutoff = 6400 if wildcards.length=="genome" else 300
-        len_cutoff = 26000
+        len_cutoff = 800
         print("Downloading only sequences with length >= {}".format(len_cutoff))
 
         tooShort = []
@@ -243,6 +229,73 @@ rule download_seqs:
         all_meta.to_csv(output.meta, sep='\t', index=False)
 
 
+#####################################################################################################
+#    BLAST - or not
+#       If VP1, need to BLAST. if genome, do not, but must rename files.
+#####################################################################################################
+
+##############################
+# If VP1 - BLAST
+###############################
+rule blast:        
+    input:
+        blast_db_file = files.blast_ref,
+        #seqs_to_blast =  "vp1/temp/downloaded_seqs.fasta" #from rule download.seqs output
+        seqs_to_blast = "temp/CoV-{id}_download_seqs.fasta"
+    output:
+        blast_out = "temp/blast_out_{id}.csv"
+    run:
+        from subprocess import call
+        import os
+        comm = ["makeblastdb -in", input.blast_db_file, "-out vp1/temp/entero_db_{} -dbtype nucl".format(wildcards.id)]
+        cmd = " ".join(comm)
+        os.system(cmd)
+        comm2 = ["blastn -task blastn -query", input.seqs_to_blast, "-db vp1/temp/entero_db_{} -outfmt '10 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qcovs' -out".format(wildcards.id), output.blast_out, "-evalue 0.0005"]
+        cmd2 = " ".join(comm2)
+        os.system(cmd2)
+
+        #blast output is specified by the call - here is what the columns are:
+        #(query is the Genbank seq we are looking for a match in, subject is the reference VP1 alignment)
+        ##First 7 columns:
+        #10     qseqid  sseqid  pident  length      mismatch    gapopen 
+        #csv    queryID subjID  %match  alignLen    #mismatch   #gap    
+
+        ##Next 4 columns
+        #qstart                     qend                    sstart                  send 
+        #start of align in query    end of align in query   start of align in subj  end of align in subj
+
+        ##Last 3 columns
+        #evalue         bitscore    qcovs
+        #Expect value   Bit score   Querty coverage per subject
+
+##############################
+# If VP1 - after BLAST, take only those that match
+###############################
+rule blast_sort:
+    input:
+        blast_result = rules.blast.output.blast_out,
+        #input_meta = "vp1/temp/downloaded_meta.tsv", #from rule download.seqs output
+        #input_seqs = "vp1/temp/downloaded_seqs.fasta" #from rule download.seqs output
+        input_seqs = "temp/CoV-{id}_download_seqs.fasta", 
+        input_meta = "temp/CoV-{id}_download_meta.tsv" 
+    output:
+        out_seqs = "temp/CoV-{id}_blast_sequences.fasta",
+        out_meta = "temp/CoV-{id}_blast_metadata.tsv"
+    params:
+        matchLen = 300,
+        dups = "vp1/temp/duplicates.tsv"
+    shell:
+        """
+        python scripts/blast_sort.py --blast {input.blast_result} \
+            --meta {input.input_meta} \
+            --seqs {input.input_seqs} \
+            --out_seqs {output.out_seqs} \
+            --out_meta {output.out_meta} \
+            --match_length {params.matchLen} \
+            --dup_file {params.dups}
+        """
+
+
 ################################
 # Align whatever's new to reduce time spent aligning whole download again...
 ################################
@@ -254,7 +307,7 @@ rule align_download:
           - filling gaps with N
         """
     input:
-        sequences = rules.download_seqs.output.sequences,
+        sequences = rules.blast_sort.output.out_seqs, #rules.download_seqs.output.sequences,
         ref = files.align_reference
     output:
         out = "temp/CoV-{id}_download_aligned_seqs.fasta"
@@ -285,7 +338,7 @@ rule align_download:
 ###############################
 rule add_meta:
     input:
-        metadata = rules.download_seqs.output.meta
+        metadata = rules.blast_sort.output.out_meta, #rules.download_seqs.output.meta
     output:
         metadata = "temp/CoV-{id}_genbank_meta.tsv"
     params:
@@ -431,7 +484,7 @@ rule filter:
     params:
         group_by = "country",
         sequences_per_group = 500, #100,
-        min_length = 5000,
+        min_length = 800,
     shell:
         """
         #should filter by host?
@@ -443,7 +496,7 @@ rule filter:
             echo "Excluding all bat & mouse samples (run {wildcards.id})"
             exclude_where="--exclude-where host=Bat host=Mouse"
             include_where=""
-        elif [ "{wildcards.id}" == "Betacoronavirus1" ]; then
+        elif [ "{wildcards.id}" == "bOC43" ]; then
             echo "Including only human & chimp samples (run {wildcards.id})"
             exclude_where="--exclude-where host!=Human"
             include_where="--include-where host=Chimpanzee"
@@ -553,7 +606,7 @@ rule refine:
     shell:
         """
         #which ones do we allow to estimate rate?
-        if [ "{wildcards.id}" == "229E" ] || [ "{wildcards.id}" == "SARS" ] || [ "{wildcards.id}" == "Betacoronavirus1" ]; then
+        if [ "{wildcards.id}" == "229E" ] || [ "{wildcards.id}" == "SARS" ] || [ "{wildcards.id}" == "Betacoronavirus1" || [ "{wildcards.id}" == "OC43"]; then
             echo "Estimating clock rate (run {wildcards.id})"
             clock_rate=""
             clock_std_dev=""
@@ -630,7 +683,7 @@ rule export:
         lat_longs = files.lat_longs,
         description = files.description
     output:
-        auspice_json = "auspice/CoV_{id}{gene}.json" #rules.all.input.auspice_json
+        auspice_json = "auspice/CoV_{id}{gene}_spike.json" #rules.all.input.auspice_json
     shell:
         """
         augur export v2 \

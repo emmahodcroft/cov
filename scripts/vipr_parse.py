@@ -21,6 +21,7 @@ if __name__ == '__main__':
     #list countries that need replacing
     # I don't know why Denmark matching doesn't work in lowercase - it should
     country_replace = [['Viet Nam', 'vietnam'], ['Denmark', 'denmark'], ["Cote dIvoire","cote_d_ivoire"],
+        ["Republic of the Congo", "democratic_republic_of_congo"],
         [" ", "_"]] #THIS MUST COME LAST
 
     #Delete the last tab from the header row of the file downloaded from vipr... messes up pandas!!

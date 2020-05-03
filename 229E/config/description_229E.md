@@ -1,1 +1,1 @@
-This phylogeny shows a tree of full-length Human Coronavirus 229E sequences from ViPR.
+This phylogeny shows a tree of spike protein Human Coronavirus 229E sequences from ViPR.
