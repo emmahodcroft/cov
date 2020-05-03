@@ -1,21 +1,20 @@
-# Code and Data for Human Coronavirus Builds
+# Code and Data for Human Coronavirus Builds (Spike only)
 
 ## About this repository
 
-This respository currently includes the data (as of 20 Apr 20) and code to run Nextstrain `augur` builds for Coronaviruses 229E, NL63, SARS, HKU1, and Betacoronavirus1. These builds focus on the human transmission of these viruses, so do not necessarily include all available samples, focusing instead on the part of the tree which includes the majority of human infections.
+This respository currently includes the data (as of 4 May 20) and code to run Nextstrain `augur` builds for Coronaviruses 229E, NL63, HKU1, and OC43 - *spike protein only*. These builds focus on the human transmission of these viruses, so do not necessarily include all available samples, focusing instead on the part of the tree which includes the majority of human infections.
 
 This respository uses a basic form of 'Databasing' to make adding new sequences from ViPR easier.
 This means you can always download the full latest metadata file from ViPR, yet only sequences that have not already been seen will be downloaded and aligned again, and then simply added to the sequences that already exist.
 
 I recommend running the `database` rule(s) first to ensure this works ok, then proceed to running the `augur`/`build` rules.
 
-## Live builds
+## Live builds for Spike Protein
 Live builds can be viewed here:
-- [Betacoronavirus1 (OC43)](https://nextstrain.org/community/nextstrain/CoV/Betacoronavirus1)
-- [229E](https://nextstrain.org/community/nextstrain/CoV/229E)
-- [SARS-CoV-1](https://nextstrain.org/community/nextstrain/CoV/SARS)
-- [NL63](https://nextstrain.org/community/nextstrain/CoV/NL63)
-- [HKU1](https://nextstrain.org/community/nextstrain/CoV/HKU1)
+- [Betacoronavirus1 (OC43)](https://nextstrain.org/community/emmahodcroft/CoV/OC43/spike)
+- [229E](https://nextstrain.org/community/emmahodcroft/CoV/229E/spike)
+- [NL63](https://nextstrain.org/community/emmahodcroft/CoV/NL63/spike)
+- [HKU1](https://nextstrain.org/community/emmahodcroft/CoV/HKU1/spike)
 
 # How to Run
 
@@ -33,15 +32,14 @@ Do this **before** trying to add any new sequences.
 
 ## Adding New Sequences
 Adding new sequences is easy.
-Navigate to ViPR and use the search function, ensuring that 'Full Genome' is ticked at the bottom of the search.
+Navigate to ViPR and use the search function.
 Navigate first to 'Coronaviridae' and 'Coronavirinae', then "Select all" in the following categories:
 * In 'Betacoronavirus':
-    * For **Betacoronavirus 1** select 'Betacoronavirus 1' (about 250)
-    * For **SARS** select 'Severe acute respiratory syndrome-related coronavirus' (about 330) and 'SARS-related coronavirus' (about 9)
-    * For **HKU1** select 'Human coronavirus HKU1' (about 50)
+    * For **Betacoronavirus 1**/**OC43** select 'Betacoronavirus 1' (about X)
+    * For **HKU1** select 'Human coronavirus HKU1' (about X)
 * In 'Alphacoronavirus':
-    * For **NL63** select 'Human coronavirus NL63' (about 70)
-    * For **229E** select 'Human coronavirus 229E' (about 40)
+    * For **NL63** select 'Human coronavirus NL63' (about X)
+    * For **229E** select 'Human coronavirus 229E' (about X)
 
 Once each search results load, select all sequences, and download the samples in *tab delimited format*.
 Once downloaded, move them into the `data` folder, and name them according to the specified format, setting the correct date (this makes debug easier).
