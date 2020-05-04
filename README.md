@@ -12,6 +12,7 @@ I recommend running the `database` rule(s) first to ensure this works ok, then p
 ## Live builds for Spike Protein
 Live builds can be viewed here:
 - [Betacoronavirus1 (OC43)](https://nextstrain.org/community/emmahodcroft/CoV/OC43/spike)
+   - [Betacoronavirus1 including animal viruses](https://nextstrain.org/community/emmahodcroft/CoV/OC43/spike-animal?c=host)
 - [229E](https://nextstrain.org/community/emmahodcroft/CoV/229E/spike)
 - [NL63](https://nextstrain.org/community/emmahodcroft/CoV/NL63/spike)
 - [HKU1](https://nextstrain.org/community/emmahodcroft/CoV/HKU1/spike)
